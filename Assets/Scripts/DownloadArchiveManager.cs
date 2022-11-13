@@ -10,6 +10,9 @@ public class DownloadArchiveManager : MonoBehaviour
     [SerializeField] private PopUp popUp;
     [SerializeField] private ToggleEditor toggleEditorTemplate;
     private List<ToggleEditor> toggleEditors = new List<ToggleEditor>();
+    [SerializeField] private int rowsChildAllowed = 3;
+    [SerializeField] private Transform rowTemplate, rowN;
+    private List<Transform> rows = new List<Transform>();
 
     async void Start()
     {        
@@ -47,16 +50,24 @@ public class DownloadArchiveManager : MonoBehaviour
         toggleEditors.Clear();
         string[] receivedList = items.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
         if (receivedList == null && receivedList.Length < 1) return;
-        Array.Reverse(receivedList);
+        Array.Reverse(receivedList);        
 
         for (int i = 0; i < 10/*receivedList.Length*/; i++)
         {
+            if (i % rowsChildAllowed == 0)
+            {
+                rowN = Instantiate(rowTemplate, rowTemplate.parent);
+                rowN.gameObject.SetActive(true);
+                rows.Add(rowN);
+            }            
+
             string[] row = receivedList[i].Split(',');
-            ToggleEditor toggleEditor = Instantiate(toggleEditorTemplate, toggleEditorTemplate.transform.parent);
+            ToggleEditor toggleEditor = Instantiate(toggleEditorTemplate, rowN);
             toggleEditor.gameObject.SetActive(true);
             toggleEditor.Version = row[6].Trim('"');
             toggleEditor.ReleaseDate = DateTime.ParseExact(row[3], "MM/dd/yyyy", CultureInfo.InvariantCulture);            
             toggleEditors.Add(toggleEditor);
+            //toggleEditor.transform.parent = rowN;
         }
     }
 }

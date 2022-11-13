@@ -8,6 +8,9 @@ public class EditorsManager : MonoBehaviour
     [SerializeField] private string editorsPath = "C:/Program Files/Unity/Hub/Editor/";
     [SerializeField] private ToggleEditor toggleEditorTemplate;
     private List<ToggleEditor> toggleEditors = new List<ToggleEditor>();
+    [SerializeField] private int rowsChildAllowed = 3;
+    [SerializeField] private Transform rowTemplate, rowN;
+    private List<Transform> rows = new List<Transform>();
 
     public string EditorsPath { get => editorsPath; set {           
             if (string.IsNullOrWhiteSpace(value)) { print("NewValueForEditorsPathIsNullOrWhiteSpace"); return; }
@@ -32,7 +35,15 @@ public class EditorsManager : MonoBehaviour
             string unityExePath = Path.Combine(editorFolder, "Unity.exe");
             if (! File.Exists(unityExePath)) { continue; }
             string dataFolder = Path.Combine(editorFolder, "Data");
-            ToggleEditor toggleEditor = Instantiate(toggleEditorTemplate,toggleEditorTemplate.transform.parent);
+
+            if (i % rowsChildAllowed == 0)
+            {
+                rowN = Instantiate(rowTemplate, rowTemplate.parent);
+                rowN.gameObject.SetActive(true);
+                rows.Add(rowN);
+            }
+
+            ToggleEditor toggleEditor = Instantiate(toggleEditorTemplate, rowN);
             toggleEditor.gameObject.SetActive(true);
             toggleEditor.Version = FileVersionInfo.GetVersionInfo(unityExePath).ProductVersion;// FileVersionInfo.GetVersionInfo(unityExePath).ProductName.Replace("(64-bit)", "").Replace("(32-bit)", "").Replace("Unity", "").Trim();
             toggleEditor.Path = unityExePath;
