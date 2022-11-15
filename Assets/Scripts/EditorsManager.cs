@@ -1,33 +1,37 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class EditorsManager : MonoBehaviour
 {
-    [SerializeField] private string editorsPath = "C:/Program Files/Unity/Hub/Editor/";
-    [SerializeField] private ToggleEditor toggleEditorTemplate;
-    private List<ToggleEditor> toggleEditors = new List<ToggleEditor>();
-    [SerializeField] private int rowsChildAllowed = 3;
-    [SerializeField] private Transform rowTemplate, rowN;
-    private List<Transform> rows = new List<Transform>();
+    [SerializeField] private EditorsCreator editorsCreatorInstalled, editorsCreatorDownloadArchive;
+    [SerializeField] private Text textEditorsPath;
+    [SerializeField] private PopUp popUp;
+    [SerializeField] private List<string> installedEditors = new List<string>(), downloadArchiveEditors = new List<string>();
 
-    public string EditorsPath { get => editorsPath; set {           
-            if (string.IsNullOrWhiteSpace(value)) { print("NewValueForEditorsPathIsNullOrWhiteSpace"); return; }
-            editorsPath = value;
-        } 
-    }
+    [SerializeField] private ToggleEditorArchive editorArchiveTemplate;
+    private List<ToggleEditorArchive> toggleEditorArchives = new List<ToggleEditorArchive>();
 
-    void Start()
+    public string EditorsPath { get => textEditorsPath.text; set {
+            textEditorsPath.text = value;
+            GetInstalledEditors();
+            GetDownloadArchiveEditors();
+        }
+    }//"C:\\Program Files\\Unity\\Hub\\Editor"
+
+    void Start() { EditorsPath = textEditorsPath.text; }
+
+    private void GetInstalledEditors()
     {
-        GetEditors();
-    }
-
-    private void GetEditors()
-    {
-        for (int i = 0; i < toggleEditors.Count; i++) { Destroy(toggleEditors[i].gameObject); }
-        toggleEditors.Clear();
         string[] directories = Directory.GetDirectories(EditorsPath);
+        installedEditors.Clear();
+        List<List<string>> platformNamesList = new List<List<string>>();
         for (int i = 0; i < directories.Length; i++)
         {
             string editorFolder = Path.Combine(directories[i], "Editor");
@@ -35,29 +39,20 @@ public class EditorsManager : MonoBehaviour
             string unityExePath = Path.Combine(editorFolder, "Unity.exe");
             if (! File.Exists(unityExePath)) { continue; }
             string dataFolder = Path.Combine(editorFolder, "Data");
-
-            if (i % rowsChildAllowed == 0)
-            {
-                rowN = Instantiate(rowTemplate, rowTemplate.parent);
-                rowN.gameObject.SetActive(true);
-                rows.Add(rowN);
-            }
-
-            ToggleEditor toggleEditor = Instantiate(toggleEditorTemplate, rowN);
-            toggleEditor.gameObject.SetActive(true);
-            toggleEditor.Version = FileVersionInfo.GetVersionInfo(unityExePath).ProductVersion;// FileVersionInfo.GetVersionInfo(unityExePath).ProductName.Replace("(64-bit)", "").Replace("(32-bit)", "").Replace("Unity", "").Trim();
-            toggleEditor.Path = unityExePath;
-            toggleEditor.UninstallerPath = Path.Combine(editorFolder, "Uninstall.exe");
-            toggleEditor.Installed = (File.Exists(dataFolder) || Directory.Exists(dataFolder)) ? File.GetLastWriteTime(dataFolder) : null;
-            toggleEditor.IsPreferred = false;//No lo veo necesario...
-            toggleEditor.ProjectCount = 0;
-            toggleEditor.PlatformsNames = GetPlatforms(dataFolder);
-            //if (toggleEditors.Contains(toggleEditor)) { continue; }
-            toggleEditors.Add(toggleEditor);
+            string[] versionParts = FileVersionInfo.GetVersionInfo(unityExePath).ProductVersion.Split('_');
+            installedEditors.Add(versionParts[0]);
+            platformNamesList.Add(GetInstalledPlatforms(dataFolder));
+            //toggleEditor.Path = unityExePath;
+            //toggleEditor.UninstallerPath = Path.Combine(editorFolder, "Uninstall.exe");
+            //toggleEditor.Installed = (File.Exists(dataFolder) || Directory.Exists(dataFolder)) ? File.GetLastWriteTime(dataFolder) : null;
+            //toggleEditor.IsPreferred = false;//No lo veo necesario...
+            //toggleEditor.ProjectCount = 0;            
         }
+        installedEditors.Reverse();
+        editorsCreatorInstalled.CreateToggleEditors(installedEditors, platformNamesList);
     }
 
-    public List<string> GetPlatforms(string dataFolder)
+    private List<string> GetInstalledPlatforms(string dataFolder)
     {
         Dictionary<string, string> platformNames = new Dictionary<string, string> {
             { "windowsstandalonesupport", "Windows" },
@@ -80,5 +75,90 @@ public class EditorsManager : MonoBehaviour
         }
 
         return directories;
+    }
+
+    private void GetDownloadArchiveEditors()
+    {
+        string allEditors = Task.Run(GetAllEditorsText).Result;
+        //string allEditors = await GetAllEditorsText();
+        if (allEditors.Equals(string.Empty)) { return; }
+
+        List<string> dirtyEditorsList = new List<string>(allEditors.Split(new[] { Environment.NewLine }, StringSplitOptions.None));
+
+        if (dirtyEditorsList.Count.Equals(0))
+        {
+            popUp.Show("http://symbolserver.unity3d.com/000Admin/history.txt don´t get any Editors", () => { });
+            return;
+        }
+
+        downloadArchiveEditors.Clear();
+
+        List<string> majorVersions = new List<string>();
+
+        for (int i = 0; i < dirtyEditorsList.Count; i++)
+        {
+            string[] row = dirtyEditorsList[i].Split(',');
+            string version = row[6].Trim('"');            
+            if (string.IsNullOrEmpty(version)) { continue; }
+            if (downloadArchiveEditors.Contains(version)) { continue; }
+            if (installedEditors.Contains(version)) { continue; }
+            downloadArchiveEditors.Add(version);
+            string[] versionParts = version.Split('.');
+            if (!majorVersions.Contains(versionParts[0]) && !versionParts[0].Equals("5"))
+            {
+                majorVersions.Add(versionParts[0]);
+            }
+            //toggleEditor.ReleaseDate = DateTime.ParseExact(row[3], "MM/dd/yyyy", CultureInfo.InvariantCulture);   
+        }
+
+        for (int i = 0; i < toggleEditorArchives.Count; i++) { Destroy(toggleEditorArchives[i].gameObject); }
+        toggleEditorArchives.Clear();
+
+        majorVersions.Reverse();
+
+        for (int i = 0; i < majorVersions.Count; i++)
+        {
+            ToggleEditorArchive toggleEditorArchive = Instantiate(editorArchiveTemplate, editorArchiveTemplate.transform.parent);
+            toggleEditorArchive.gameObject.SetActive(true);
+            toggleEditorArchive.MajorVersion = majorVersions[i];
+            //toggleEditorArchive.GetComponent<Toggle>().onValueChanged.AddListener(value => {
+            //    if (!value) { return; }
+            //    this.CreateToggleEditors(majorVersions[i]);
+            //});
+            toggleEditorArchives.Add(toggleEditorArchive);
+        }
+
+        toggleEditorArchives[0].GetComponent<Toggle>().isOn = true;
+    }
+
+    private async Task<string> GetAllEditorsText()
+    {
+        string result = string.Empty;
+        using (WebClient webClient = new WebClient())
+        {
+            Task<string> downloadStringTask = webClient.DownloadStringTaskAsync(new Uri(@"http://symbolserver.unity3d.com/000Admin/history.txt"));
+            try
+            {
+                result = await downloadStringTask;
+            }
+            catch (WebException webException)
+            {
+                popUp.Show($"WebException {webException.Message}", () => { popUp.Close(); });
+            }
+            catch (Exception exception)
+            {
+                popUp.Show($"WebException {exception.Message}", () => { popUp.Close(); });
+            }
+        }
+        return result;
+    }
+
+    public void CreateToggleEditors(string year)
+    {
+        List<string> versions = downloadArchiveEditors.Where(e => e.Contains(year)).ToList();
+        versions.Reverse();
+        List<List<string>> platformNamesList = new List<List<string>>();
+        for (int i = 0; i < versions.Count; i++) { platformNamesList.Add(new List<string>()); } //No lo veo tan necesario, podria confirmar si esta vacio en la creacion de toggles???
+        editorsCreatorDownloadArchive.CreateToggleEditors(versions, platformNamesList);
     }
 }
