@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -31,5 +32,8 @@ public class EditorsCreator : MonoBehaviour
             toggleEditor.PlatformsNames = platformsNamesList[i];
             toggleEditors.Add(toggleEditor);
         }
+
+        //if (toggleEditors.Count.Equals(0)) { return; }
+        //toggleEditors[0].IsCheckedToUse = true;
     }
 }

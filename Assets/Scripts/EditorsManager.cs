@@ -18,10 +18,12 @@ public class EditorsManager : MonoBehaviour
     [SerializeField] private ToggleEditorArchive editorArchiveTemplate;
     private List<ToggleEditorArchive> toggleEditorArchives = new List<ToggleEditorArchive>();
 
+    [SerializeField] private TemplatesManager templatesManager;
+
     public string EditorsPath { get => textEditorsPath.text; set {
             textEditorsPath.text = value;
-            GetInstalledEditors();
-            GetDownloadArchiveEditors();
+            //GetDownloadArchiveEditors();//SIN INTERNET
+            GetInstalledEditors();            
         }
     }//"C:\\Program Files\\Unity\\Hub\\Editor"
 
@@ -32,6 +34,9 @@ public class EditorsManager : MonoBehaviour
         string[] directories = Directory.GetDirectories(EditorsPath);
         installedEditors.Clear();
         List<List<string>> platformNamesList = new List<List<string>>();
+
+        string path = string.Empty;//Prueba
+
         for (int i = 0; i < directories.Length; i++)
         {
             string editorFolder = Path.Combine(directories[i], "Editor");
@@ -46,10 +51,14 @@ public class EditorsManager : MonoBehaviour
             //toggleEditor.UninstallerPath = Path.Combine(editorFolder, "Uninstall.exe");
             //toggleEditor.Installed = (File.Exists(dataFolder) || Directory.Exists(dataFolder)) ? File.GetLastWriteTime(dataFolder) : null;
             //toggleEditor.IsPreferred = false;//No lo veo necesario...
-            //toggleEditor.ProjectCount = 0;            
+            //toggleEditor.ProjectCount = 0;
+            //
+            if(i.Equals(directories.Length-1)) { path = unityExePath; }//Prueba
         }
         installedEditors.Reverse();
         editorsCreatorInstalled.CreateToggleEditors(installedEditors, platformNamesList);
+
+        templatesManager.ScanTemplates(path);//Prueba
     }
 
     private List<string> GetInstalledPlatforms(string dataFolder)
@@ -80,8 +89,11 @@ public class EditorsManager : MonoBehaviour
     private void GetDownloadArchiveEditors()
     {
         string allEditors = Task.Run(GetAllEditorsText).Result;
-        //string allEditors = await GetAllEditorsText();
-        if (allEditors.Equals(string.Empty)) { return; }
+        if (allEditors.Contains("Error") || allEditors.Equals(string.Empty)) 
+        {
+            popUp.Show($"ErrorGetDownloadArchiveEditors {allEditors}", () => { popUp.Close(); });
+            return; 
+        }
 
         List<string> dirtyEditorsList = new List<string>(allEditors.Split(new[] { Environment.NewLine }, StringSplitOptions.None));
 
@@ -121,10 +133,6 @@ public class EditorsManager : MonoBehaviour
             ToggleEditorArchive toggleEditorArchive = Instantiate(editorArchiveTemplate, editorArchiveTemplate.transform.parent);
             toggleEditorArchive.gameObject.SetActive(true);
             toggleEditorArchive.MajorVersion = majorVersions[i];
-            //toggleEditorArchive.GetComponent<Toggle>().onValueChanged.AddListener(value => {
-            //    if (!value) { return; }
-            //    this.CreateToggleEditors(majorVersions[i]);
-            //});
             toggleEditorArchives.Add(toggleEditorArchive);
         }
 
@@ -143,11 +151,11 @@ public class EditorsManager : MonoBehaviour
             }
             catch (WebException webException)
             {
-                popUp.Show($"WebException {webException.Message}", () => { popUp.Close(); });
+                result = webException.Message;
             }
             catch (Exception exception)
             {
-                popUp.Show($"WebException {exception.Message}", () => { popUp.Close(); });
+                result = exception.Message;
             }
         }
         return result;

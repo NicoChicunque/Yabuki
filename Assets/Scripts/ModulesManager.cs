@@ -3,25 +3,47 @@ using UnityEngine;
 
 public class ModulesManager : MonoBehaviour
 {
-    [SerializeField] private List<Module> modules;
-    [SerializeField] private List<Platform> platforms;
+    [SerializeField] private Transform installed, download;
+    [SerializeField] private Platform platformTemplate;
+    [SerializeField] private Module moduleTemplate;
+    [SerializeField] private List<string> downloadPlatforms = new List<string>(), downloadModules = new List<string>();
+       // ,installedPlatforms = new List<string>(),installedModules = new List<string>();
+    private List<Platform> platforms = new List<Platform>();
+    private List<Module> modules = new List<Module>();
 
     //private void Start()
     //{
-    //    UpdateModulesIsDownloaded(new List<string> { "Windows", "Android" });
-    //    UpdatePlatformIsCheckedToUse("OSX");
+        //UpdateModulesIsDownloaded(new List<string> { "Windows", "Android" });
+        //UpdatePlatformIsCheckedToUse("OSX");        
     //}
 
-    public void UpdateModulesIsDownloaded(List<string> modulesNames)
+    public void UpdateModulesIsDownloaded(List<string> installedPlatformsNames)
     {
-        List<Module> allModules = new List<Module>();
-        allModules.AddRange(modules);
-        allModules.AddRange(platforms);
+        for (int i = 0; i < platforms.Count; i++) { Destroy(platforms[i].gameObject); }
+        platforms.Clear();
+        for (int i = 0; i < modules.Count; i++) { Destroy(modules[i].gameObject); }
+        modules.Clear();
 
-        for (int i = 0; i < allModules.Count; i++)
+        for (int i = 0; i < downloadPlatforms.Count; i++)
         {
-            allModules[i].IsDownloaded = modulesNames.Contains(allModules[i].Name);
+            Platform platform = Instantiate(platformTemplate, installedPlatformsNames.Contains(downloadPlatforms[i]) ? installed : download);
+            platform.gameObject.SetActive(true);
+            platform.Name = downloadPlatforms[i];
+            platform.IsDownloaded = installedPlatformsNames.Contains(downloadPlatforms[i]);
+            platforms.Add(platform);
         }
+
+        for (int i = 0; i < downloadModules.Count; i++)
+        {
+            Module module = Instantiate(moduleTemplate, installedPlatformsNames.Contains(downloadModules[i]) ? installed : download);
+            module.gameObject.SetActive(true);
+            module.Name = downloadModules[i];
+            module.IsDownloaded = installedPlatformsNames.Contains(downloadModules[i]);
+            modules.Add(module);
+        }
+
+        if(platforms.Count.Equals(0)) { return; }
+        UpdatePlatformIsCheckedToUse(platforms[0].Name);
     }
 
     public void UpdatePlatformIsCheckedToUse(string platformName)
