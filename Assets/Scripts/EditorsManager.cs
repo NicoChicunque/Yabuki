@@ -22,8 +22,8 @@ public class EditorsManager : MonoBehaviour
 
     public string EditorsPath { get => textEditorsPath.text; set {
             textEditorsPath.text = value;
-            //GetDownloadArchiveEditors();//SIN INTERNET
-            GetInstalledEditors();            
+            GetInstalledEditors();
+            GetDownloadArchiveEditors();//SIN INTERNET                      
         }
     }//"C:\\Program Files\\Unity\\Hub\\Editor"
 
