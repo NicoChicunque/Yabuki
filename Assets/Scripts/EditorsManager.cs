@@ -58,7 +58,7 @@ public class EditorsManager : MonoBehaviour
         installedEditors.Reverse();
         editorsCreatorInstalled.CreateToggleEditors(installedEditors, platformNamesList);
 
-        templatesManager.ScanTemplates(path);//Prueba
+        templatesManager.UpdateTemplates(path);//Prueba
     }
 
     private List<string> GetInstalledPlatforms(string dataFolder)

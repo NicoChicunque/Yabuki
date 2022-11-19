@@ -9635,6 +9635,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d4c5b6ab9ef60f4a8d8dea15c93a41a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  installed: {fileID: 58936606}
+  download: {fileID: 1416743045}
+  downloadTemplates: []
+  togglePackageTemplate: {fileID: 1784073754}
 --- !u!114 &666982156
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25507,13 +25511,14 @@ GameObject:
   - component: {fileID: 1784073751}
   - component: {fileID: 1784073752}
   - component: {fileID: 1784073753}
+  - component: {fileID: 1784073754}
   m_Layer: 5
-  m_Name: TabTemplate (0)
+  m_Name: "ToggleP\xE4ckageTemplate (0)"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1784073751
 RectTransform:
   m_ObjectHideFlags: 0
@@ -25532,10 +25537,10 @@ RectTransform:
   m_Father: {fileID: 58936606}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 40}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 82.681915, y: -30}
+  m_SizeDelta: {x: 145.36383, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1784073752
 MonoBehaviour:
@@ -25598,6 +25603,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   audioSource: {fileID: 1764439931}
+--- !u!114 &1784073754
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1784073750}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 882c1ca5e42954a4cbdaa42bc686c179, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  textName: {fileID: 619764117}
 --- !u!1 &1784149359
 GameObject:
   m_ObjectHideFlags: 0
@@ -29078,6 +29096,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d4c5b6ab9ef60f4a8d8dea15c93a41a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  installed: {fileID: 0}
+  download: {fileID: 0}
+  downloadTemplates: []
+  togglePackageTemplate: {fileID: 0}
 --- !u!1 &1957994598
 GameObject:
   m_ObjectHideFlags: 0
